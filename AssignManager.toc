@@ -1,0 +1,9 @@
+## Interface: 11304
+## Title: Assign manager
+## Notes: Help (heal) assignment operations
+## Author: Xytovl
+## Versin: 1.0
+
+embeds.xml
+
+AssignManager.lua
