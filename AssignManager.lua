@@ -28,7 +28,7 @@ MinimapIcon = LibStub("LibDataBroker-1.1"):NewDataObject("AssignManager", {
 
 function AssignManager:OnInitialize()
 	FrameXML_Debug(1)
-	self.db = LibStub("AceDB-3.0"):New("AssignManager", defaults, true)
+	self.db = LibStub("AceDB-3.0"):New("AssignManagerDB", defaults, true)
 	C_ChatInfo.RegisterAddonMessagePrefix(ChatPrefix)
 	self.minimap_icon = LibStub("LibDBIcon-1.0")
 	self.minimap_icon:Register("AssignManager", MinimapIcon, self.db.profile.minimap)
@@ -205,10 +205,18 @@ function AssignManager:CreateWindow()
 	self.main_window = AceGUI:Create("Window")
 	--self.main_window:Hide()
 	self.main_window:SetTitle("Assign Manager")
+	if self.db.profile.window
+		then
+			self.main_window:SetStatusTable(self.db.profile.window)
+		end
 
 	self.table = AceGUI:Create("SimpleGroup")
 	self.table:SetLayout("Table")
 	self.main_window:AddChild(self.table)
 	self:UpdateTable()
 	AceEvent:RegisterMessage("ASSIGNMENTS_CHANGED", function() self:UpdateTable() end)
+
+	self.main_window:SetCallback("OnClose", function(w)
+		self.db.profile.window = w.status
+	end)
 end

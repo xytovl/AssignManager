@@ -2,7 +2,7 @@
 ## Title: Assign manager
 ## Notes: Help (heal) assignment operations
 ## Author: Xytovl
-## SavedVariables: AssignManager
+## SavedVariables: AssignManagerDB
 ## Versin: 1.0
 
 embeds.xml
