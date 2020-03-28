@@ -6,11 +6,21 @@ AceSerializer = LibStub("AceSerializer-3.0")
 
 ChatPrefix = "AssignManager"
 
+local defaults = {
+	profile = {
+		minimap = {
+			hide = false
+		}
+	}
+}
+
 MinimapIcon = LibStub("LibDataBroker-1.1"):NewDataObject("AssignManager", {
 	type = "data source",
 	text = "Assign manager",
 	icon = "Interface\\Icons\\Spell_Holy_prayerofspirit",
-	OnClick = function () AssignManager:ToggleWindow() end,
+	OnClick = function ()
+		AceEvent:SendMessage("TOGGLE_WINDOW")
+	end,
 	OnTooltipShow = function (tooltip)
 		tooltip:AddLine("|cFF0FFF00Assign manager|r", 1, 1, 1);
 	end
@@ -18,14 +28,16 @@ MinimapIcon = LibStub("LibDataBroker-1.1"):NewDataObject("AssignManager", {
 
 function AssignManager:OnInitialize()
 	FrameXML_Debug(1)
+	self.db = LibStub("AceDB-3.0"):New("AssignManager", defaults, true)
 	C_ChatInfo.RegisterAddonMessagePrefix(ChatPrefix)
 	self.minimap_icon = LibStub("LibDBIcon-1.0")
-	self.minimap_icon:Register("AssignManager", MinimapIcon)
+	self.minimap_icon:Register("AssignManager", MinimapIcon, self.db.profile.minimap)
 	self:InitAssignments()
 	self:CreateWindow()
 	self:RegisterChatCommand("assignmanager", "SlashCommand")
 	AceEvent:RegisterEvent("GROUP_ROSTER_UPDATE", function() self:UpdateAssignments() end)
 	AceEvent:RegisterEvent("CHAT_MSG_ADDON", function(prefix, msg) if prefix == ChatPrefix then self:ReceiveAssignments(msg) end end)
+	AceEvent:RegisterMessage("TOGGLE_WINDOW", function() self:ToggleWindow() end)
 	self:Print("assign manager initialized")
 end
 
@@ -50,10 +62,10 @@ function AssignManager:GetSubjects(classes)
 	if not classes
 		then
 			classes = {
-				["PALADIN"] = true,
-				["PRIEST"] = true,
-				["SHAMAN"] = true,
-				["DRUID"] = true
+				PALADIN = true,
+				PRIEST = true,
+				SHAMAN = true,
+				DRUID = true
 			}
 		end
 	local subjects = {}
@@ -63,7 +75,10 @@ function AssignManager:GetSubjects(classes)
 			if classes[class]
 				then
 					name, _ = UnitName("raid"..i)
-					subjects[#subjects + 1] = name
+					subjects[#subjects + 1] = {
+						["name"] = name,
+						["class"] = class
+					}
 				end
 		end
 	return subjects
@@ -107,7 +122,7 @@ function AssignManager:InitAssignments()
 	self.assignments = {}
 	for i, subject in pairs(self.subjects)
 		do
-			self.assignments[subject] = {}
+			self.assignments[subject["name"]] = {}
 		end
 	AceEvent:SendMessage("ASSIGNMENTS_CHANGED")
 end
@@ -120,12 +135,12 @@ function AssignManager:UpdateAssignments()
 	self.assignments = {}
 	for i, subject in pairs(self.subjects)
 		do
-			self.assignments[subject] = {}
-			if old[subject]
+			self.assignments[subject["name"]] = {}
+			if old[subject["name"]]
 				then
 					for j, target in pairs(self.targets)
 						do
-							self.assignments[subject][target["name"]] = old[subject][target["name"]]
+							self.assignments[subject["name"]][target["name"]] = old[subject["name"]][target["name"]]
 						end
 				end
 		end
@@ -139,7 +154,7 @@ function AssignManager:ReceiveAssignments(msg)
 end
 
 function AssignManager:SetAssign(subject, target, value)
-	self.assignments[subject][target["name"]] = value
+	self.assignments[subject["name"]][target["name"]] = value
 	msg = AceSerializer:Serialize(self.assignments)
 	C_ChatInfo.SendAddonMessage(ChatPrefix, msg, "RAID")
 end
@@ -168,11 +183,12 @@ function AssignManager:UpdateTable()
 			self.table:AddChild(l)
 		end
 
-	for i, player in ipairs(self.subjects)
+	for i, subject in ipairs(self.subjects)
 		do
 			local w = {}
 			l = AceGUI:Create("Label")
-			l:SetText(player)
+			l:SetText(subject["name"])
+			l:SetColor(unpack(C_ClassColor.GetClassColor(subject["class"])))
 			self.table:AddChild(l)
 			for j, target in ipairs(self.targets)
 				do
@@ -186,7 +202,7 @@ function AssignManager:UpdateTable()
 end
 
 function AssignManager:CreateWindow()
-	self.main_window = AceGUI:Create("Frame")
+	self.main_window = AceGUI:Create("Window")
 	--self.main_window:Hide()
 	self.main_window:SetTitle("Assign Manager")
 
