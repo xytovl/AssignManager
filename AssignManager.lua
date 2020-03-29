@@ -51,7 +51,7 @@ function AssignManager:OnInitialize()
 end
 
 function AssignManager:SlashCommand(input)
-	input, arg1 = self:GetArgs(input, 2)
+	input, arg1, arg2 = self:GetArgs(input, 3)
 	if input == "show" then
 		self.main_window:Show()
 		return
@@ -61,7 +61,7 @@ function AssignManager:SlashCommand(input)
 		return
 	end
 	if input == "fake" then
-		self:FakeAssignments(tonumber(arg1))
+		self:FakeAssignments(tonumber(arg1), tonumber(arg2))
 		return
 	end
 	self:Print([[
@@ -173,9 +173,12 @@ function AssignManager:InitAssignments()
 	AceEvent:SendMessage("ASSIGNMENTS_CHANGED")
 end
 
-function AssignManager:FakeAssignments(groups)
+function AssignManager:FakeAssignments(groups, subjects)
 	if not groups then
 		groups = 8
+	end
+	if not subjects then
+		subjects = 4
 	end
 	self.targets = {
 		{
@@ -211,6 +214,12 @@ function AssignManager:FakeAssignments(groups)
 			class = "SHAMAN"
 		}
 	}
+	for i= 1,subjects - 4 do
+		self.subjects[#self.subjects + 1] = {
+			name = "Heal"..i,
+			class = "PRIEST"
+		}
+	end
 	self.assignments = {}
 	for i, s in pairs(self.subjects) do
 		self.assignments[s.name] = {}
@@ -254,7 +263,7 @@ function AssignManager:ReportAssignments()
 			if #activeTargets > 0
 				then
 					SendChatMessage(
-						subject["name"]..": "..table.concat(activeTargets, ", "),
+						subject["name"].." -> "..table.concat(activeTargets, ", "),
 						self.db.profile.reportChannel.type,
 						nil,
 						self.db.profile.reportChannel.channel
