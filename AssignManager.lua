@@ -10,6 +10,10 @@ local defaults = {
 	profile = {
 		minimap = {
 			hide = false
+		},
+		reportChannel = {
+			type = "raid",
+			name = "raid"
 		}
 	}
 }
@@ -46,7 +50,32 @@ function AssignManager:SlashCommand(input)
 		self.main_window:Show()
 		return
 	end
+	if input == "report" then
+		self:ReportAssignments()
+		return
+	end
 	self:Print("usage:\n  show show the main window")
+end
+
+function AssignManager:SetChannel(name)
+	if GetChatTypeIndex(name) ~= 0 and string.upper(name) ~= "CHANNEL"
+		then
+			self.db.profile.reportChannel = {
+				type = name,
+				text = name
+			}
+		return
+		end
+	local idx, _ = GetChannelName(name)
+	if idx
+		then
+			self.db.profile.reportChannel = {
+            type = "CHANNEL",
+            text = name,
+            channel = idx
+         }
+		end
+
 end
 
 function AssignManager:ToggleWindow()
@@ -147,6 +176,31 @@ function AssignManager:UpdateAssignments()
 	AceEvent:SendMessage("ASSIGNMENTS_CHANGED")
 end
 
+function AssignManager:ReportAssignments()
+	for i, subject in pairs(self.subjects)
+		do
+			local targets = self.assignments[subject["name"]]
+			local msg = subject["name"]..": "
+			local activeTargets = {}
+			for t, v in pairs(targets)
+				do
+					if v
+						then
+							activeTargets[#activeTargets + 1] = t
+						end
+				end
+			if #activeTargets
+				then
+					SendChatMessage(
+						subject["name"]..": "..tables.concat(activeTargets, ", "),
+						self.db.profile.reportChannel.type,
+						nil,
+						self.db.profile.reportChannel.channel
+						)
+				end
+		end
+end
+
 function AssignManager:ReceiveAssignments(msg)
 	print(msg)
 	self.assignments = AceSerializer:Deserialize(msg)
@@ -224,6 +278,21 @@ function AssignManager:CreateWindow()
 	self.main_window:AddChild(self.table)
 	self:UpdateTable()
 	AceEvent:RegisterMessage("ASSIGNMENTS_CHANGED", function() self:UpdateTable() end)
+
+	local reportG = AceGUI:Create("SimpleGroup")
+	reportG:SetLayout("Flow")
+	self.main_window:AddChild(reportG)
+	local b = AceGUI:Create("Button")
+	b:SetText("report")
+	b:SetAutoWidth(true)
+	b:SetCallback("OnClick", function() self:ReportAssignments() end)
+	reportG:AddChild(b)
+	local e = AceGUI:Create("EditBox")
+	e:SetText(self.db.profile.reportChannel.name)
+	e:SetWidth(100)
+	e:SetCallback("OnTextChanged", function() self:SetChannel(e:GetText()) end)
+	reportG:AddChild(e)
+
 
 	self.main_window:SetCallback("OnClose", function(w)
 		self.db.profile.window = w.status
