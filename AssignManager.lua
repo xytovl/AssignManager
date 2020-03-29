@@ -236,11 +236,13 @@ function AssignManager:UpdateTable()
 
 	-- Header row
 	local l = AceGUI:Create("Label")
+	l:SetWidth(0)
 	self.table:AddChild(l)
 	for j, value in ipairs(self.targets)
 		do
 			l = AceGUI:Create("Label")
 			l:SetText(value["name"])
+			l:SetWidth(l.label:GetStringWidth())
 			self.table:AddChild(l)
 		end
 
@@ -249,6 +251,7 @@ function AssignManager:UpdateTable()
 			local w = {}
 			l = AceGUI:Create("Label")
 			l:SetText(subject["name"])
+			l:SetWidth(l.label:GetStringWidth())
 			local r, g, b, hex = GetClassColor(subject["class"])
 			l:SetColor(r, g, b)
 			self.table:AddChild(l)
