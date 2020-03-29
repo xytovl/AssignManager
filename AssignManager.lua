@@ -162,6 +162,14 @@ end
 function AssignManager:UpdateTable()
 	self.table:ReleaseChildren()
 
+	local idx = UnitInRaid("player")
+	if idx
+		then
+			local _, rank = GetRaidRosterInfo(idx)
+		else
+			local rank = 1
+		end
+
 	data = {}
 	-- First column is subjects, then one per target
 	data.columns = {0}
@@ -193,6 +201,7 @@ function AssignManager:UpdateTable()
 			for j, target in ipairs(self.targets)
 				do
 					c = AceGUI:Create("CheckBox")
+					c:SetDisabled(rank == 0)
 					c:SetWidth(20)
 					c:SetValue(self.assignments[player][target["name"]])
 					c:SetCallback("OnValueChanged", function(c) self:SetAssign(player, target, c:GetValue()) end)
