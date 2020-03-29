@@ -341,7 +341,7 @@ end
 
 function AssignManager:CreateWindow()
 	self.main_window = AceGUI:Create("Window")
-	--self.main_window:Hide()
+	self.main_window:Hide()
 	self.main_window:SetTitle("Assign Manager")
 	self.main_window:EnableResize(false)
 	if self.db.profile.window
