@@ -217,11 +217,10 @@ function AssignManager:UpdateTable()
 	self.table:ReleaseChildren()
 
 	local idx = UnitInRaid("player")
+	local rank = 1
 	if idx
 		then
-			local _, rank = GetRaidRosterInfo(idx)
-		else
-			local rank = 1
+			_, rank = GetRaidRosterInfo(idx)
 		end
 
 	data = {}
@@ -257,8 +256,8 @@ function AssignManager:UpdateTable()
 					c = AceGUI:Create("CheckBox")
 					c:SetDisabled(rank == 0)
 					c:SetWidth(20)
-					c:SetValue(self.assignments[player][target["name"]])
-					c:SetCallback("OnValueChanged", function(c) self:SetAssign(player, target, c:GetValue()) end)
+					c:SetValue(self.assignments[subject.name][target.name])
+					c:SetCallback("OnValueChanged", function(c) self:SetAssign(subject, target, c:GetValue()) end)
 					self.table:AddChild(c)
 				end
 		end
