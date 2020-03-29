@@ -250,7 +250,7 @@ function AssignManager:UpdateTable()
 			local w = {}
 			l = AceGUI:Create("Label")
 			l:SetText(subject["name"])
-			l:SetColor(unpack(C_ClassColor.GetClassColor(subject["class"])))
+			--l:SetColor(unpack(C_ClassColor.GetClassColor(subject["class"])))
 			self.table:AddChild(l)
 			for j, target in ipairs(self.targets)
 				do
