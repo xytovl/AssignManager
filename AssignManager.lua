@@ -272,6 +272,7 @@ function AssignManager:CreateWindow()
 		then
 			self.main_window:SetStatusTable(self.db.profile.window)
 		end
+	self.db.profile.window = self.main_window.status
 
 	self.table = AceGUI:Create("SimpleGroup")
 	self.table:SetLayout("Table")
@@ -293,8 +294,4 @@ function AssignManager:CreateWindow()
 	e:SetCallback("OnTextChanged", function() self:SetChannel(e:GetText()) end)
 	reportG:AddChild(e)
 
-
-	self.main_window:SetCallback("OnClose", function(w)
-		self.db.profile.window = w.status
-	end)
 end
