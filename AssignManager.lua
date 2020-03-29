@@ -192,7 +192,7 @@ function AssignManager:ReportAssignments()
 			if #activeTargets
 				then
 					SendChatMessage(
-						subject["name"]..": "..tables.concat(activeTargets, ", "),
+						subject["name"]..": "..table.concat(activeTargets, ", "),
 						self.db.profile.reportChannel.type,
 						nil,
 						self.db.profile.reportChannel.channel
