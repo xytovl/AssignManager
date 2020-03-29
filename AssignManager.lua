@@ -276,12 +276,16 @@ function AssignManager:UpdateTable()
 					self.table:AddChild(c)
 				end
 		end
+
+	self.main_window:SetHeight(self.fixed_el_height + self.table.frame:GetHeight())
+	self.main_window:SetWidth(math.min(200, self.table.frame:GetWidth() + 20))
 end
 
 function AssignManager:CreateWindow()
 	self.main_window = AceGUI:Create("Window")
 	--self.main_window:Hide()
 	self.main_window:SetTitle("Assign Manager")
+	self.main_window:EnableResize(false)
 	if self.db.profile.window
 		then
 			self.main_window:SetStatusTable(self.db.profile.window)
@@ -291,7 +295,6 @@ function AssignManager:CreateWindow()
 	self.table = AceGUI:Create("SimpleGroup")
 	self.table:SetLayout("Table")
 	self.main_window:AddChild(self.table)
-	self:UpdateTable()
 	AceEvent:RegisterMessage("ASSIGNMENTS_CHANGED", function() self:UpdateTable() end)
 
 	local reportG = AceGUI:Create("SimpleGroup")
@@ -308,4 +311,7 @@ function AssignManager:CreateWindow()
 	e:SetCallback("OnTextChanged", function() self:SetChannel(e:GetText()) end)
 	reportG:AddChild(e)
 
+	self.fixed_el_height = 50 + reportG.frame:GetHeight()
+
+	self:UpdateTable()
 end
