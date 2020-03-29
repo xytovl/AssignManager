@@ -51,6 +51,7 @@ function AssignManager:OnInitialize()
 end
 
 function AssignManager:SlashCommand(input)
+	input, arg1 = self:GetArgs(input, 2)
 	if input == "show" then
 		self.main_window:Show()
 		return
@@ -60,7 +61,7 @@ function AssignManager:SlashCommand(input)
 		return
 	end
 	if input == "fake" then
-		self:FakeAssignments()
+		self:FakeAssignments(tonumber(arg1))
 		return
 	end
 	self:Print([[
@@ -172,7 +173,10 @@ function AssignManager:InitAssignments()
 	AceEvent:SendMessage("ASSIGNMENTS_CHANGED")
 end
 
-function AssignManager:FakeAssignments()
+function AssignManager:FakeAssignments(groups)
+	if not groups then
+		groups = 8
+	end
 	self.targets = {
 		{
 			type = "PLAYER",
@@ -183,7 +187,7 @@ function AssignManager:FakeAssignments()
 			name = "Secondtank"
 		},
 	}
-	for i= 1,8 do
+	for i= 1,groups do
 		self.targets[#self.targets + 1] = {
 			type = "GROUP",
 			name = "G"..i
@@ -298,21 +302,26 @@ function AssignManager:UpdateTable()
 	local l = AceGUI:Create("Label")
 	l:SetWidth(0)
 	self.table:AddChild(l)
+	local subjectW = 0
+	local colW = 0
 	for j, value in ipairs(self.targets)
 		do
 			l = AceGUI:Create("Label")
 			l:SetText(value["name"])
 			l:SetJustifyH("CENTER")
-			l:SetWidth(math.max(24, l.label:GetStringWidth()))
+			local w = math.max(24, l.label:GetStringWidth())
+			colW = colW + w
+			l:SetWidth(w)
 			self.table:AddChild(l)
 		end
 
 	for i, subject in ipairs(self.subjects)
 		do
-			local w = {}
 			l = AceGUI:Create("Label")
 			l:SetText(subject["name"])
-			l:SetWidth(l.label:GetStringWidth())
+			local w = l.label:GetStringWidth()
+			l:SetWidth(w)
+			subjectW = math.max(subjectW, w)
 			local r, g, b, hex = GetClassColor(subject["class"])
 			l:SetColor(r, g, b)
 			self.table:AddChild(l)
@@ -326,9 +335,8 @@ function AssignManager:UpdateTable()
 					self.table:AddChild(c)
 				end
 		end
-
 	self.main_window:SetHeight(self.fixed_el_height + self.table.frame:GetHeight())
-	self.main_window:SetWidth(math.min(200, self.table.frame:GetWidth() + 20))
+	self.main_window:SetWidth(math.max(200, subjectW + colW + 20))
 end
 
 function AssignManager:CreateWindow()
