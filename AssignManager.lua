@@ -40,7 +40,12 @@ function AssignManager:OnInitialize()
 	self:CreateWindow()
 	self:RegisterChatCommand("assignmanager", "SlashCommand")
 	AceEvent:RegisterEvent("GROUP_ROSTER_UPDATE", function() self:UpdateAssignments() end)
-	AceEvent:RegisterEvent("CHAT_MSG_ADDON", function(prefix, msg) if prefix == ChatPrefix then self:ReceiveAssignments(msg) end end)
+	AceEvent:RegisterEvent("CHAT_MSG_ADDON", function(_, prefix, msg, _, sender)
+		if prefix ~= ChatPrefix then
+			return
+		end
+		self:ReceiveAssignments(msg)
+	end)
 	AceEvent:RegisterMessage("TOGGLE_WINDOW", function() self:ToggleWindow() end)
 	self:Print("assign manager initialized")
 end
@@ -205,8 +210,10 @@ function AssignManager:ReportAssignments()
 end
 
 function AssignManager:ReceiveAssignments(msg)
-	print(msg)
-	self.assignments = AceSerializer:Deserialize(msg)
+	local success, assignments = AceSerializer:Deserialize(msg)
+	if success then
+		self.assignments = assignments
+	end
 	AceEvent:SendMessage("ASSIGNMENTS_CHANGED")
 end
 
