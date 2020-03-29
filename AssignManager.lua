@@ -248,28 +248,41 @@ function AssignManager:UpdateAssignments()
 end
 
 function AssignManager:ReportAssignments()
-	for i, subject in pairs(self.subjects)
-		do
-			local targets = self.assignments[subject["name"]]
-			local msg = subject["name"]..": "
-			local activeTargets = {}
-			for t, v in pairs(targets)
-				do
-					if v
-						then
-							activeTargets[#activeTargets + 1] = t
-						end
-				end
-			if #activeTargets > 0
-				then
-					SendChatMessage(
-						subject["name"].." -> "..table.concat(activeTargets, ", "),
-						self.db.profile.reportChannel.type,
-						nil,
-						self.db.profile.reportChannel.channel
-						)
-				end
+	local assigns = {}
+	for i, target in pairs(self.targets) do
+		local s = {}
+		for j, subject in pairs(self.subjects) do
+			if self.assignments[subject.name][target.name] then
+				s[#s + 1] = subject.name
+			end
 		end
+		if #s > 0 then
+			local msg = table.concat(s, ", ")
+			local found = false
+			for _, a in pairs(assigns) do
+				if a.msg == msg then
+					found = true
+					a.targets[#a.targets + 1] = target.name
+					break
+				end
+			end
+			if not found then
+				assigns[#assigns + 1] = {
+					msg = msg,
+					targets = {target.name}
+				}
+			end
+		end
+	end
+
+	for _, a in pairs(assigns) do
+		SendChatMessage(
+			table.concat(a.targets, ", ").." -> "..a.msg,
+			self.db.profile.reportChannel.type,
+			nil,
+			self.db.profile.reportChannel.channel
+			)
+	end
 end
 
 function AssignManager:ReceiveAssignments(msg)
