@@ -59,7 +59,15 @@ function AssignManager:SlashCommand(input)
 		self:ReportAssignments()
 		return
 	end
-	self:Print("usage:\n  show show the main window")
+	if input == "fake" then
+		self:FakeAssignments()
+		return
+	end
+	self:Print([[
+usage:
+  show show the main window
+  report report assignments to configured channel
+  fake set fake assginments for debug]])
 end
 
 function AssignManager:SetChannel(name)
@@ -161,6 +169,48 @@ function AssignManager:InitAssignments()
 		do
 			self.assignments[subject["name"]] = {}
 		end
+	AceEvent:SendMessage("ASSIGNMENTS_CHANGED")
+end
+
+function AssignManager:FakeAssignments()
+	self.targets = {
+		{
+			type = "PLAYER",
+			name = "Firsttank"
+		},
+		{
+			type = "PLAYER",
+			name = "Secondtank"
+		},
+	}
+	for i= 1,8 do
+		self.targets[#self.targets + 1] = {
+			type = "GROUP",
+			name = "G"..i
+		}
+	end
+	self.subjects = {
+		{
+			name = "Paladin",
+			class = "PALADIN"
+		},
+		{
+			name = "Priest",
+			class = "PRIEST"
+		},
+		{
+			name = "Druid",
+			class = "DRUID"
+		},
+		{
+			name = "Shaman",
+			class = "SHAMAN"
+		}
+	}
+	self.assignments = {}
+	for i, s in pairs(self.subjects) do
+		self.assignments[s.name] = {}
+	end
 	AceEvent:SendMessage("ASSIGNMENTS_CHANGED")
 end
 
