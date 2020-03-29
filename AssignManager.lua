@@ -120,20 +120,23 @@ function AssignManager:GetTargets()
 	for i = 1,MAX_RAID_MEMBERS
 		do
 			name, rank, subgroup, level, class, fileName, zone, online, isDead, role, isML = GetRaidRosterInfo(i)
-			if role == "MAINTANK"
+			if name
 				then
-					MTS[#MTS + 1] = {
-						["type"] = "PLAYER",
-						["name"] = name
-					}
-				else
-					if not groups[subgroup]
-						then
-							groups[subgroup] = {
-								["type"] = "GROUP",
-								["name"] = "G"..subgroup
-							}
-						end
+				if role == "MAINTANK"
+					then
+						MTS[#MTS + 1] = {
+							["type"] = "PLAYER",
+							["name"] = name
+						}
+					else
+						if not groups[subgroup]
+							then
+								groups[subgroup] = {
+									["type"] = "GROUP",
+									["name"] = "G"..subgroup
+								}
+							end
+					end
 				end
 		end
 	local targets = MTS
@@ -242,7 +245,8 @@ function AssignManager:UpdateTable()
 		do
 			l = AceGUI:Create("Label")
 			l:SetText(value["name"])
-			l:SetWidth(l.label:GetStringWidth())
+			l:SetJustifyH("CENTER")
+			l:SetWidth(math.max(24, l.label:GetStringWidth()))
 			self.table:AddChild(l)
 		end
 
