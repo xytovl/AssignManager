@@ -192,7 +192,7 @@ function AssignManager:ReportAssignments()
 							activeTargets[#activeTargets + 1] = t
 						end
 				end
-			if #activeTargets
+			if #activeTargets > 0
 				then
 					SendChatMessage(
 						subject["name"]..": "..table.concat(activeTargets, ", "),
