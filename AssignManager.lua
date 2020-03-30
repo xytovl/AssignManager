@@ -35,6 +35,7 @@ function AssignManager:OnInitialize()
 	C_ChatInfo.RegisterAddonMessagePrefix(ChatPrefix)
 	self.minimap_icon = LibStub("LibDBIcon-1.0")
 	self.minimap_icon:Register("AssignManager", MinimapIcon, self.db.profile.minimap)
+	self.assignments = {}
 	self:CreateWindow()
 	self:RegisterChatCommand("assignmanager", "SlashCommand")
 	AceEvent:RegisterEvent("GROUP_ROSTER_UPDATE", function() self:UpdateRoster() end)
@@ -99,64 +100,56 @@ function AssignManager:ToggleWindow()
 end
 
 -- Get players we can assign targets to
-function AssignManager:GetSubjects(classes)
-	if not classes
-		then
-			classes = {
-				PALADIN = true,
-				PRIEST = true,
-				SHAMAN = true,
-				DRUID = true
-			}
-		end
-	local subjects = {}
-	for i = 1,MAX_RAID_MEMBERS
-		do
-			_, class, _ = UnitClass("raid"..i)
-			if classes[class]
-				then
-					name, _ = UnitName("raid"..i)
-					subjects[#subjects + 1] = {
-						["name"] = name,
-						["class"] = class
-					}
-				end
-		end
-	return subjects
-end
+function AssignManager:GetSubjectsTargets(classes)
+	if not classes then
+		classes = {
+			PALADIN = true,
+			PRIEST = true,
+			SHAMAN = true,
+			DRUID = true
+		}
+	end
 
--- Get the list of possible targets
-function AssignManager:GetTargets()
+	local classNames = {}
+	for i = 1,8 do
+		local classInfo = C_CreatureInfo.GetClassInfo(i)
+		if classInfo and classes[classInfo.classFile] then
+			classNames[classInfo.className] = true
+		end
+	end
+
+	local subjects = {}
 	local groups = {}
 	local MTS = {}
-	for i = 1,MAX_RAID_MEMBERS
-		do
-			name, rank, subgroup, level, class, fileName, zone, online, isDead, role, isML = GetRaidRosterInfo(i)
-			if name
-				then
-				if role == "MAINTANK"
-					then
-						MTS[#MTS + 1] = {
-							["type"] = "PLAYER",
-							["name"] = name
-						}
-					else
-						if not groups[subgroup]
-							then
-								groups[subgroup] = {
-									["type"] = "GROUP",
-									["name"] = "G"..subgroup
-								}
-							end
-					end
+	for i = 1,MAX_RAID_MEMBERS do
+		name, rank, subgroup, level, class, fileName, zone, online, isDead, role, isML = GetRaidRosterInfo(i)
+		if name then
+			if role == "MAINTANK" then
+				MTS[#MTS + 1] = {
+					["type"] = "PLAYER",
+					["name"] = name
+				}
+			else 
+				if not groups[subgroup] then
+					groups[subgroup] = {
+						["type"] = "GROUP",
+						["name"] = "G"..subgroup
+					}
 				end
+			end
+			if classNames[class] then
+				subjects[#subjects + 1] = {
+					["name"] = name,
+					["class"] = class
+				}
+			end
 		end
+	end
 	local targets = MTS
-	for k,v in pairs(groups)
-		do
-			targets[#targets + 1] = v
-		end
-	return targets
+	for k,v in pairs(groups) do
+		targets[#targets + 1] = v
+	end
+	return subjects, targets
 end
 
 function AssignManager:FakeAssignments(groups, subjects)
@@ -215,22 +208,18 @@ function AssignManager:FakeAssignments(groups, subjects)
 end
 
 function AssignManager:UpdateRoster()
-	self.targets = self:GetTargets()
-	self.subjects = self:GetSubjects()
+	self.subjects, self.targets = self:GetSubjectsTargets()
 
 	local old = self.assignments
 	self.assignments = {}
-	for i, subject in pairs(self.subjects)
-		do
-			self.assignments[subject["name"]] = {}
-			if old[subject["name"]]
-				then
-					for j, target in pairs(self.targets)
-						do
-							self.assignments[subject["name"]][target["name"]] = old[subject["name"]][target["name"]]
-						end
-				end
+	for i, subject in pairs(self.subjects) do
+		self.assignments[subject["name"]] = {}
+		if old[subject["name"]] then
+			for j, target in pairs(self.targets) do
+				self.assignments[subject["name"]][target["name"]] = old[subject["name"]][target["name"]]
+			end
 		end
+	end
 	self:UpdateTable()
 	AceEvent:SendMessage("ASSIGNMENTS_CHANGED")
 end
