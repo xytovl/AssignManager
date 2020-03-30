@@ -31,15 +31,13 @@ MinimapIcon = LibStub("LibDataBroker-1.1"):NewDataObject("AssignManager", {
 })
 
 function AssignManager:OnInitialize()
-	FrameXML_Debug(1)
 	self.db = LibStub("AceDB-3.0"):New("AssignManagerDB", defaults, true)
 	C_ChatInfo.RegisterAddonMessagePrefix(ChatPrefix)
 	self.minimap_icon = LibStub("LibDBIcon-1.0")
 	self.minimap_icon:Register("AssignManager", MinimapIcon, self.db.profile.minimap)
-	self:InitAssignments()
 	self:CreateWindow()
 	self:RegisterChatCommand("assignmanager", "SlashCommand")
-	AceEvent:RegisterEvent("GROUP_ROSTER_UPDATE", function() self:UpdateAssignments() end)
+	AceEvent:RegisterEvent("GROUP_ROSTER_UPDATE", function() self:UpdateRoster() end)
 	AceEvent:RegisterEvent("CHAT_MSG_ADDON", function(_, prefix, msg, _, sender)
 		if prefix ~= ChatPrefix then
 			return
@@ -161,18 +159,6 @@ function AssignManager:GetTargets()
 	return targets
 end
 
-function AssignManager:InitAssignments()
-	self.targets = self:GetTargets()
-	self.subjects = self:GetSubjects()
-
-	self.assignments = {}
-	for i, subject in pairs(self.subjects)
-		do
-			self.assignments[subject["name"]] = {}
-		end
-	AceEvent:SendMessage("ASSIGNMENTS_CHANGED")
-end
-
 function AssignManager:FakeAssignments(groups, subjects)
 	if not groups then
 		groups = 8
@@ -224,10 +210,11 @@ function AssignManager:FakeAssignments(groups, subjects)
 	for i, s in pairs(self.subjects) do
 		self.assignments[s.name] = {}
 	end
+	self:UpdateTable()
 	AceEvent:SendMessage("ASSIGNMENTS_CHANGED")
 end
 
-function AssignManager:UpdateAssignments()
+function AssignManager:UpdateRoster()
 	self.targets = self:GetTargets()
 	self.subjects = self:GetSubjects()
 
@@ -244,7 +231,16 @@ function AssignManager:UpdateAssignments()
 						end
 				end
 		end
+	self:UpdateTable()
 	AceEvent:SendMessage("ASSIGNMENTS_CHANGED")
+end
+
+function AssignManager:UpdateAssignments()
+	for i, subject in pairs(self.subjects) do
+		for j, target in pairs(self.targets) do
+			self.checkboxes[subject.name][target.name]:SetValue(self.assignments[subject.name][target.name])
+		end
+	end
 end
 
 function AssignManager:ReportAssignments()
@@ -294,12 +290,19 @@ function AssignManager:ReceiveAssignments(msg)
 end
 
 function AssignManager:SetAssign(subject, target, value)
-	self.assignments[subject["name"]][target["name"]] = value
+	if (not not self.assignments[subject.name][target.name]) == value then
+		return
+	end
+	self.assignments[subject.name][target.name] = value
 	msg = AceSerializer:Serialize(self.assignments)
 	C_ChatInfo.SendAddonMessage(ChatPrefix, msg, "RAID")
 end
 
 function AssignManager:UpdateTable()
+	self.checkboxes = {}
+	if not self.table then
+		return
+	end
 	self.table:ReleaseChildren()
 
 	local idx = UnitInRaid("player")
@@ -339,6 +342,7 @@ function AssignManager:UpdateTable()
 
 	for i, subject in ipairs(self.subjects)
 		do
+			self.checkboxes[subject.name] = {}
 			l = AceGUI:Create("Label")
 			l:SetText(subject["name"])
 			local w = l.label:GetStringWidth()
@@ -354,6 +358,7 @@ function AssignManager:UpdateTable()
 					c:SetWidth(16)
 					c:SetHeight(20)
 					c:SetValue(self.assignments[subject.name][target.name])
+					self.checkboxes[subject.name][target.name] = c
 					c:SetCallback("OnValueChanged", function(c) self:SetAssign(subject, target, c:GetValue()) end)
 					self.table:AddChild(c)
 				end
@@ -376,7 +381,6 @@ function AssignManager:CreateWindow()
 	self.table = AceGUI:Create("SimpleGroup")
 	self.table:SetLayout("Table")
 	self.main_window:AddChild(self.table)
-	AceEvent:RegisterMessage("ASSIGNMENTS_CHANGED", function() self:UpdateTable() end)
 
 	local reportG = AceGUI:Create("SimpleGroup")
 	reportG:SetLayout("Flow")
@@ -394,5 +398,6 @@ function AssignManager:CreateWindow()
 
 	self.fixed_el_height = 50 + reportG.frame:GetHeight()
 
-	self:UpdateTable()
+	self:UpdateRoster()
+	AceEvent:RegisterMessage("ASSIGNMENTS_CHANGED", function() self:UpdateAssignments() end)
 end
