@@ -114,7 +114,7 @@ function AssignManager:GetSubjectsTargets(classes)
 	for i = 1,8 do
 		local classInfo = C_CreatureInfo.GetClassInfo(i)
 		if classInfo and classes[classInfo.classFile] then
-			classNames[classInfo.className] = true
+			classNames[classInfo.className] = classInfo.classFile
 		end
 	end
 
@@ -139,8 +139,8 @@ function AssignManager:GetSubjectsTargets(classes)
 			end
 			if classNames[class] then
 				subjects[#subjects + 1] = {
-					["name"] = name,
-					["class"] = class
+					name = name,
+					class = classNames[class]
 				}
 			end
 		end
