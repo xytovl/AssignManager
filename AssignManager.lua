@@ -111,7 +111,7 @@ function AssignManager:GetSubjectsTargets(classes)
 	end
 
 	local classNames = {}
-	for i = 1,8 do
+	for i = 1,12 do
 		local classInfo = C_CreatureInfo.GetClassInfo(i)
 		if classInfo and classes[classInfo.classFile] then
 			classNames[classInfo.className] = classInfo.classFile
