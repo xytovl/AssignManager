@@ -13,7 +13,7 @@ local defaults = {
 		},
 		reportChannel = {
 			type = "raid",
-			name = "raid"
+			text = "raid"
 		}
 	}
 }
@@ -380,7 +380,7 @@ function AssignManager:CreateWindow()
 	b:SetCallback("OnClick", function() self:ReportAssignments() end)
 	reportG:AddChild(b)
 	local e = AceGUI:Create("EditBox")
-	e:SetText(self.db.profile.reportChannel.name)
+	e:SetText(self.db.profile.reportChannel.text)
 	e:SetWidth(100)
 	e:SetCallback("OnTextChanged", function() self:SetChannel(e:GetText()) end)
 	reportG:AddChild(e)
