@@ -293,6 +293,7 @@ function AssignManager:UpdateTable()
 		return
 	end
 	self.table:ReleaseChildren()
+	self.table:PauseLayout()
 
 	local idx = UnitInRaid("player")
 	local rank = 1
@@ -352,6 +353,8 @@ function AssignManager:UpdateTable()
 					self.table:AddChild(c)
 				end
 		end
+	self.table:ResumeLayout()
+	self.table:DoLayout()
 	self.main_window:SetHeight(self.fixed_el_height + self.table.frame:GetHeight())
 	self.main_window:SetWidth(math.max(200, subjectW + colW + 20))
 end
